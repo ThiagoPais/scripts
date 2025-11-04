@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Script to close version and merge to main
+
+# Check current branch
+current_branch=$(git branch --show-current)
+echo "Current branch: $current_branch"
+
+switch_n_merge_to_develop_branch() {
+    # If not on develop or main, merge to develop and switch to it
+    if [[ "$current_branch" != "develop" && "$current_branch" != "main" ]]; then
+        echo "Not on develop or main branch. Merging current branch to develop..."
+        git checkout develop
+        git pull origin develop || return 1
+        git merge "$current_branch" -m "merge $current_branch into develop"
+        echo "Switched to develop branch"
+    elif [[ "$current_branch" == "main" ]]; then
+        echo "Currently on main branch. Switching to develop..."
+        git checkout develop
+        git pull origin develop || return 1
+        git merge "$current_branch" -m "$current_branch"
+        echo "Switched to develop branch"
+    fi
+    return 0
+}
+
+closing_version() {
+    # Find and update version in pom.xml or package.json
+    if [ -f "pom.xml" ]; then
+        echo "Found pom.xml file"
+        # Extract current version
+        current_version=$(grep -o "<version>.*</version>" pom.xml | head -1 | sed 's/<version>\(.*\)<\/version>/\1/')
+        echo "Current version: $current_version"
+        
+        # Remove any suffix after version number (e.g., 1.2.3-rc.4 -> 1.2.3, 1.2.3-alpha.1 -> 1.2.3)
+        new_version=$(echo "$current_version" | sed 's/\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/')
+        echo "New version: $new_version"
+        
+        # Update version in pom.xml
+        sed -i "0,/<version>.*<\/version>/s/<version>.*<\/version>/<version>$new_version<\/version>/" pom.xml
+        echo "Updated version in pom.xml"
+        git add pom.xml
+    elif [ -f "package.json" ]; then
+        echo "Found package.json file"
+        # Extract current version
+        current_version=$(grep -o '"version": ".*"' package.json | head -1 | sed 's/"version": "\(.*\)"/\1/')
+        echo "Current version: $current_version"
+        
+        # Remove any suffix after version number (e.g., 1.2.3-rc.4 -> 1.2.3, 1.2.3-alpha.1 -> 1.2.3)
+        new_version=$(echo "$current_version" | sed 's/\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/')
+        echo "New version: $new_version"
+        
+        # Update version in package.json
+        sed -i 's/"version": ".*"/"version": "'$new_version'"/' package.json
+        echo "Updated version in package.json"
+        npm install
+        echo "Updated package-lock.json"
+        git add package.json package-lock.json
+    else
+        echo "Error: Neither pom.xml nor package.json found"
+        return 1
+    fi
+    git commit -m "version closure" || return 1
+    git push origin $current_branch || return 1
+    echo "Committed and pushed version change to origin"
+    return 0
+}
+
+commit_to_develop() {
+    git push origin develop || return 1
+    echo "Committed and pushed version change to develop"
+    return 0
+}
+
+commit_to_main() {
+    git checkout main || return 1
+    git pull origin main || return 1
+    
+    # Attempt merge and capture output
+    merge_output=$(git merge develop -m "develop" 2>&1)
+    merge_status=$?
+    
+    if [ $merge_status -ne 0 ]; then
+        echo "Merge conflict detected:"
+        echo "$merge_output"
+        git merge --abort
+        return 1
+    fi
+    
+    git push origin main || return 1
+    echo "Merged develop into main and pushed"
+    return 0
+}
+
+
+status=0
+
+closing_version
+status=$?
+
+if [[ $err -eq 0 ]]; then
+    switch_n_merge_to_develop_branch
+    status=$?
+fi
+
+if [ $status -eq 0 ]; then
+    commit_to_develop
+    status=$?
+fi
+
+if [ $status -eq 0 ]; then
+    commit_to_main
+    status=$?
+fi
+
+if [ $status -eq 0 ]; then
+    echo "Version closure and merge completed successfully!"
+else
+    echo "Script failed with errors. Check the output above for details."
+fi

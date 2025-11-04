@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$2" ]
+then
+    . cd script
+    mv $1 $2
+else
+    echo "Falta argumentos"
+fi

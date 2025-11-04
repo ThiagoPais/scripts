@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ "$1" ]; then
+    if [ "$1" = "-rd" ]; then
+        cd $HOME/Documents/selo/selo-backend
+        echo running selo application in dev mode
+        npm run start:dev
+    elif [ "$1" = "-r" ]; then
+        cd $HOME/Documents/selo/selo-backend
+        echo running selo application in prod mode
+        npm run start
+    fi
+else
+    code $HOME/Documents/selo/selo-backend
+fi

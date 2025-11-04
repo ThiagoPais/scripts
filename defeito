@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cd $HOME/Documents/defeitos
+
+if [ "$1" ]
+then
+    file_name="Defeito_$1.md"
+    if [ -f $file_name ]
+    then
+        echo "Defeito já existe"
+        code $file_name
+    else
+        echo "Criando arquivo $file_name"
+        cp -i ModeloDefeito.md $file_name
+        code $file_name
+    fi
+else
+    echo "Abrindo pasta de defeitos"
+    code .
+fi

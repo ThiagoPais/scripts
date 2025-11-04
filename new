@@ -1,0 +1,175 @@
+#!/bin/bash
+
+menu() {
+    echo "Comandos disponíveis:"
+    echo ""
+    echo "script - Cria um novo script"
+    echo "tx - Clona um repositório na pasta dos transmissores"
+    echo "rx - Clona um repositório na pasta dos receptores"
+    echo "cm - Clona um repositório na pasta dos comuns"
+    echo "ipa - Clona um repositório na pasta dos IPA"
+    echo "analise - Cria um novo arquivo em Analises"
+    echo "doc - Cria um novo arquivo em Documents (pode incluir subpastas)"
+    echo "defeito - Cria um novo arquivo de análise de defeitos"
+}
+
+if [ "$1" ]
+then
+    if [ "$1" == "script" ]
+    then
+        cd $HOME/personal-scripts
+        echo "#!/bin/bash" > $2
+        chmod +x $2
+        code $2
+
+    elif [ "$1" == "tx" ]
+    then
+        cd $HOME/Documents/aplicacoes/transmissor
+        if [ "$2" ]
+        then
+            repo_name=$(basename -s .git $2)
+            if [ -f $repo_name ]
+            then
+                echo "Repositório já existe"
+            else
+                echo "Criando repositório $repo_name"
+                git clone $2
+                code $repo_name
+            fi
+        else
+            echo "Argumento não informado. Coloque o link do repositório como argumento."
+        fi
+
+    elif [ "$1" == "rx" ]
+    then
+        cd $HOME/Documents/aplicacoes/receptor
+        if [ "$2" ]
+        then
+            repo_name=$(basename -s .git $2)
+            if [ -d $repo_name ]
+            then
+                echo "Repositório já existe"
+            else
+                echo "Criando repositório $repo_name"
+                git clone $2
+                code $repo_name
+            fi
+        else
+            echo "Argumento não informado. Coloque o link do repositório como argumento."
+        fi
+
+    elif [ "$1" == "cm" ]
+    then
+        cd $HOME/Documents/aplicacoes/comum
+        if [ "$2" ]
+        then
+            repo_name=$(basename -s .git $2)
+            if [ -f $repo_name ]
+            then
+                echo "Repositório já existe"
+            else
+                echo "Criando repositório $repo_name"
+                git clone $2
+                code $repo_name
+            fi
+        else
+            echo "Argumento não informado. Coloque o link do repositório como argumento."
+        fi
+
+    elif [ "$1" == "ipa" ]
+    then
+        cd $HOME/Documents/aplicacoes/ipa
+        if [ "$2" ]
+        then
+            repo_name=$(basename -s .git $2)
+            if [ -f $repo_name ]
+            then
+                echo "Repositório já existe"
+            else
+                echo "Criando repositório $repo_name"
+                git clone $2
+                code $repo_name
+            fi
+        else
+            echo "Argumento não informado. Coloque o link do repositório como argumento."
+        fi
+
+    elif [ "$1" == "defeito" ]
+    then
+        cd $HOME/Documents/defeitos
+        if [ "$2" ]
+        then
+            file_name="Defeito_$2.md"
+            if [ -f $file_name ]
+            then
+                echo "Defeito já existe"
+                code $file_name
+            else
+                echo "Criando arquivo $file_name"
+                cp -i ModeloDefeito.md $file_name
+                code $file_name
+            fi
+        else
+            echo "Argumento não informado. Informe o número do defeito."
+        fi
+
+    elif [ "$1" == "analise" ]
+    then
+        cd $HOME/Documents/analises
+        if [ "$2" ]
+        then
+            file_name="$2"
+
+            if [ -f "$file_name" ]
+            then
+                echo "Arquivo já existe"
+                code "$file_name"
+            else
+                echo "Criando arquivo $file_name"
+                touch "$file_name"
+                code "$file_name"
+            fi
+        else
+            echo "Argumento não informado. Informe o nome do arquivo."
+        fi
+
+    elif [ "$1" == "doc" ]
+    then
+        cd $HOME/Documents
+        if [ "$2" ]
+        then
+            file_name="$2"
+            # Extrai o diretório do caminho do arquivo
+            dir_path=$(dirname "$file_name")
+            
+            # Cria o diretório se não existir (incluindo diretórios pais)
+            if [ "$dir_path" != "." ] && [ ! -d "$dir_path" ]
+            then
+                echo "Criando diretório(s): $dir_path"
+                mkdir -p "$dir_path"
+            fi
+            
+            if [ -f "$file_name" ]
+            then
+                echo "Arquivo já existe"
+                code "$file_name"
+            else
+                echo "Criando arquivo $file_name"
+                touch "$file_name"
+                code "$file_name"
+            fi
+        else
+            echo "Argumento não informado. Informe o nome do arquivo."
+        fi
+
+    elif [ "$1" == "-h" ]
+    then
+        menu
+
+    else
+        echo "Comando não reconhecido"
+        menu
+    fi
+else
+    echo "Argumento não informado. Coloque o nome do script como argumento."
+fi

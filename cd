@@ -1,0 +1,51 @@
+#!/bin/bash
+
+if [ "$1" ]
+then
+    case $1 in
+        transmissor|tx)
+            cd $HOME/Documents/aplicacoes/transmissor
+            ;;
+        receptor|rx)
+            cd $HOME/Documents/aplicacoes/receptor
+            ;;
+        ipa)
+            cd $HOME/Documents/aplicacoes/ipa
+            ;;
+        comum|cm)
+            cd $HOME/Documents/aplicacoes/comum
+            ;;
+        aplicacoes|aplicacao|app|ap)
+            cd $HOME/Documents/aplicacoes
+            ;;
+        defeito|defeitos)
+            cd $HOME/Documents/defeitos
+            ;;
+        plat|plataforma)
+            cd $HOME/Documents/plataforma-capacitacao-gecap11
+            ;;
+        cursos|curso|alura)
+            cd $HOME/Documents/cursos-alura
+            ;;
+        selo)
+            cd $HOME/Documents/selo
+            ;;
+        scripts|script)
+            cd $HOME/personal-scripts
+            ;;
+        tasks|task)
+            cd $HOME/Documents/tasks
+            ;;
+        capacitacao|cap|capac)
+            cd $HOME/Documents/capacitacao
+            ;;
+        doc|documentacao|doc-tec|doc-tecnica)
+            cd "$HOME/Documents/documentacao-tecnica" 2>/dev/null
+            ;;
+        *)
+            cd $HOME/Documents
+            ;;
+    esac
+else
+    cd $HOME/Documents
+fi

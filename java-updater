@@ -1,0 +1,42 @@
+#!/bin/bash
+
+docker login docker.binarios.intranet.bb.com.br && \
+docker run -it --rm --network host -u 0 \
+  --security-opt seccomp=unconfined \
+  --cap-add SYS_ADMIN \
+  -v $(pwd):/app \
+  -e USER=$(id -u):$(id -g) \
+  docker.binarios.intranet.bb.com.br/bb/dev/dev-nodejs:20.18.0 \
+  /bin/sh -c "\
+  cd /tmp && rm -rf dev-code-updater && \
+  # Update and install git
+  microdnf update -y && \
+  microdnf install -y git && \
+
+  # Clona e instala o dev-code-updater
+  git clone https://fontes.intranet.bb.com.br/dev/publico/dev-code-updater && \
+  cd dev-code-updater && \
+
+  # Configura o npm
+  curl -k https://binarios.intranet.bb.com.br:443/artifactory/generic-bb-binarios-aic-local/publico/alfred-templates/.npmrc -o ~/.npmrc && \
+
+  # Instala Yeoman, dev-code-updater e demais dependencias
+  npm install -g yo && \
+  npm install && \
+  npm link && \
+
+  # Atualiza a aplicação
+  cd /app && \
+
+  # Se tiver problemas de permissionamento descomente as duas linhas abaixo
+  git config --global --add safe.directory /app && \
+  chmod -R 777 . && \
+  yo generator-dev-code-updater:update && \
+
+
+  # Cria variaveis de ambiente para representar usuario e grupo
+  USER_ID=$(echo $USER | cut -d: -f1) && \
+  GROUP_ID=$(echo $USER | cut -d: -f2) && \
+
+  # Faz com que os arquivos modificados pelo CLI fiquem como pertencentes ao mesmo usuario host
+  (git diff --name-only; git ls-files --others --exclude-standard) | awk '{print \"\\\"\"\$0\"\\\"\"}' | xargs -I {} "

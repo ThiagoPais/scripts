@@ -1,0 +1,21 @@
+#!/bin/bash
+
+name=$1
+path=$2
+if [ "$name" ]
+then
+    if [ "$path" ]
+    then
+        echo "creating $name in path=$path" 
+        nest g s $name $path
+        nest g co $name $path
+        nest g mo $name $path
+    else
+        echo "creating $name"
+        nest g s $name
+        nest g co $name
+        nest g mo $name
+    fi
+else
+    echo "Nenhum argumento informado. Por favor, informe o nome do componente."
+fi

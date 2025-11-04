@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ "$1" ]
+then
+    case $1 in
+        b)
+            echo run build
+            npm run build
+            ;;
+        r)
+            echo run start
+            npm run start
+            ;;
+        rd)
+            echo run start:dev
+            npm run start:dev
+            ;;
+        t)
+            echo run test
+            npm run test
+            ;;
+        i)
+            echo install
+            sudo npm install
+            ;;
+        *)
+            echo "Comando não encontrado"
+            echo "Comandos disponíveis:"
+            echo ""
+            echo "r - Execute a aplicação em modo de produção"
+            echo "rd - Execute a aplicação em modo de desenvolvimento"
+            echo "t - Execute os testes"
+            ;;
+    esac
+else
+    echo "Comandos disponíveis:"
+    echo ""
+    echo "r - Execute a aplicação em modo de produção"
+    echo "rd - Execute a aplicação em modo de desenvolvimento"
+    echo "t - Execute os testes"
+fi

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Please provide a branch name"
+    exit 1
+fi
+
+if git show-ref --quiet refs/heads/"$1"; then
+    # Branch exists, just checkout
+    git checkout "$1"
+else
+    # Branch doesn't exist, create it
+    git checkout -b "$1"
+fi

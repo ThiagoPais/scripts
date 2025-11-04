@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ "$1" ]
+then
+    if [ "$1" = "scripts" ]
+    then
+        code $HOME/personal-scripts
+    else
+        cd $HOME/personal-scripts
+        code $1
+    fi
+else
+    echo "Argumento não informado. Coloque o nome do script como argumento."
+fi

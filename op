@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if [ "$1" ]
+then
+    case $1 in
+        doc|documentacao|doc-tec|doc-tecnica)
+            code "$HOME/Documents/documentacao-tecnica" 2>/dev/null
+            ;;
+        capacitacao|cap|capac)
+            code "$HOME/Documents/capacitacao" 2>/dev/null
+            ;;
+        tasks|task)
+            code "$HOME/Documents/tasks" 2>/dev/null
+            ;;
+        analise|analises|an)
+            code "$HOME/Documents/analises" 2>/dev/null
+            ;;
+        selo)
+            code "$HOME/Documents/selo/selo-backend" 2>/dev/null
+            ;;
+        *)
+            cd "$HOME/Documents/aplicacoes" || exit
+            for dir in */; do
+                if [ -d "$dir" ]; then
+                    echo "Searching in directory: $dir"
+                    # Use find with -maxdepth 1 to search only in the current directory level
+                    found_dir=$(find "$dir" -maxdepth 1 -mindepth 1 -type d -iname "*$1*" | head -n 1)
+                    if [ -n "$found_dir" ]; then
+                        echo "Found directory: $found_dir"
+                        cd "$found_dir" || continue
+                        git pull 2>/dev/null
+                        code . 2>/dev/null
+                        cd - >/dev/null
+                        exit 0
+                    fi
+                fi
+            done
+            echo "No matching directory found."
+            ;;
+    esac
+else
+    echo "Please provide a valid option or directory name to search for."
+    exit 1
+fi

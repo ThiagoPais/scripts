@@ -1,0 +1,7 @@
+#!/bin/bash
+
+usarNode14
+
+npm login
+
+usarNode22

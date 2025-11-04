@@ -1,0 +1,22 @@
+#!/bin/bash
+
+eval $(ssh-agent)
+
+if [ "$1" ]
+then
+    case $1 in
+        hub|github|pessoal)
+            ssh-add ~/.ssh/github_key
+            ;;
+        lab|gitlab|fontes|trabalho|bb)
+            ssh-add ~/.ssh/fontes_key
+            ;;
+        *)
+            ssh-add ~/.ssh/github_key
+			ssh-add ~/.ssh/fontes_key
+            ;;
+    esac
+else
+    ssh-add ~/.ssh/github_key
+	ssh-add ~/.ssh/fontes_key
+fi

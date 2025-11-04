@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# alias cgo='converter-git-origin' em ~/.zshrc(WSL) ou ~/.bashrc(Linux "padrão")
+
+# Este script converte as URLs de origem dos repositórios Git de HTTP para SSH e vice-versa do BB.
+# Somente funciona com os repositórios remotos nomeados como origin
+
+# Para converter para SSH, execute o script com a opção -s.
+# Para converter para HTTPS, execute o script com a opção -h.
+
+# Se não for passado nenhum argumento além do tipo de origem acima, o script irá converter o diretorio atual e seus subdiretórios.
+# Se forem passados diretórios argumentos, o script irá converter os diretorios passados e seus subdiretórios.
+
+process_item() {
+    local item="$1"
+
+    if [ -d "$item" ]; then
+        if [ -d "$item/.git" ] && [ -n "$(git -C $item remote -v)" ]; then # tem que ser um diretório git e ter um repositorio remoto configurado
+            cd "$item"
+            current_url=$(git remote get-url origin)
+            if [ "$target_type" = "-s" ]; then
+                if [[ "$current_url" != git* ]]; then
+                    git remote set-url origin "git@fontes.intranet.bb.com.br:$(git remote get-url origin | sed -E 's/.*com.br[\/:](.+)/\1/')"
+                    echo "Changed $item to SSH URL"
+                    ((changed_dir_count++))
+                fi
+            elif [ "$target_type" = "-h" ]; then
+                if [[ "$current_url" != https* ]]; then
+                    git remote set-url origin "https://fontes.intranet.bb.com.br/$(git remote get-url origin | sed -E 's/.*com.br[\/:](.+)/\1/')"
+                    echo "Changed $item to HTTPS URL"
+                    ((changed_dir_count++))
+                fi
+            fi
+            cd - > /dev/null # alternar entre diretórios sem exibir a saída no terminal
+        fi
+        search_nested_dirs "$item"
+    fi
+}
+
+search_nested_dirs() {    
+    for item in "$1"/*; do
+        process_item "$item"
+    done
+}
+
+if [ "$1" = "-s" ] || [ "$1" = "-h" ]; then
+    start=$(date +%s)
+    export target_type="$1"
+    export changed_dir_count=0
+    if [ $# -eq 1 ]; then
+        process_item "." # Processa o diretorio atual
+        search_nested_dirs "." # Processa os subdiretorios do diretorio atual
+    else
+        shift # Remove o primeiro argumento passado que é o tipo de origem
+        for dir in "$@"; do # Itera sobre os diretorios passados como argumentos
+            if [ -d "$dir" ]; then
+                process_item "$dir" # Processa o diretorio passado como argumento
+                search_nested_dirs "$dir" # Processa os subdiretorios do diretorio passado como argumento
+            fi
+        done
+    fi
+    end=$(date +%s)
+    echo -e "\n$changed_dir_count directories converted in $((end-start)) seconds\n"
+else
+    echo "Usage: $0 [-s|-h] [directory...]"
+    echo "-s: Change to SSH URLs"
+    echo "-h: Change to HTTPS URLs"
+    exit 1
+fi

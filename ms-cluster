@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Script para listar serviços em namespaces que começam com "opb" em todos os clusters
+# Autor: Script gerado para listar serviços OPB
+# Data: $(date +%Y-%m-%d)
+
+set -e
+
+# Cores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}=== Listando serviços OPB em todos os clusters ===${NC}"
+echo ""
+
+# Função para verificar se kubectl está disponível
+check_kubectl() {
+    if ! command -v kubectl &> /dev/null; then
+        echo -e "${RED}Erro: kubectl não está instalado ou não está no PATH${NC}"
+        exit 1
+    fi
+}
+
+# Função para obter todos os contextos/clusters
+get_clusters() {
+    kubectl config get-contexts --output=name
+}
+
+# Função para listar namespaces que começam com "opb"
+get_opb_namespaces() {
+    local context=$1
+    kubectl --context="$context" get namespaces --no-headers -o custom-columns=":metadata.name" 2>/dev/null | grep "^opb" || true
+}
+
+# Função para listar serviços em um namespace
+get_services_in_namespace() {
+    local context=$1
+    local namespace=$2
+    kubectl --context="$context" get services -n "$namespace" --no-headers -o custom-columns=":metadata.name" 2>/dev/null || true
+}
+
+# Função principal
+main() {
+    check_kubectl
+    
+    # Obter todos os clusters
+    clusters=$(get_clusters)
+    
+    if [ -z "$clusters" ]; then
+        echo -e "${YELLOW}Nenhum cluster encontrado na configuração do kubectl${NC}"
+        exit 0
+    fi
+    
+    # Array associativo para armazenar resultados
+    declare -A cluster_services
+    
+    # Iterar sobre cada cluster
+    while IFS= read -r cluster; do
+        echo -e "${YELLOW}Processando cluster: ${cluster}${NC}"
+        
+        # Verificar se o cluster está acessível
+        if ! kubectl --context="$cluster" cluster-info &>/dev/null; then
+            echo -e "${RED}  ⚠️  Cluster $cluster não está acessível, pulando...${NC}"
+            continue
+        fi
+        
+        # Obter namespaces que começam com "opb"
+        opb_namespaces=$(get_opb_namespaces "$cluster")
+        
+        if [ -z "$opb_namespaces" ]; then
+            echo -e "  ${RED}Nenhum namespace encontrado que comece com 'opb'${NC}"
+            cluster_services["$cluster"]=""
+            continue
+        fi
+        
+        # Array para armazenar serviços deste cluster
+        cluster_service_list=()
+        
+        # Para cada namespace opb, obter serviços
+        while IFS= read -r namespace; do
+            if [ -n "$namespace" ]; then
+                echo -e "  ${BLUE}Verificando namespace: $namespace${NC}"
+                services=$(get_services_in_namespace "$cluster" "$namespace")
+                
+                if [ -n "$services" ]; then
+                    while IFS= read -r service; do
+                        if [ -n "$service" ]; then
+                            cluster_service_list+=("$service")
+                            echo -e "    ${GREEN}✓ $service${NC}"
+                        fi
+                    done <<< "$services"
+                else
+                    echo -e "    ${YELLOW}Nenhum serviço encontrado${NC}"
+                fi
+            fi
+        done <<< "$opb_namespaces"
+        
+        # Armazenar serviços do cluster
+        cluster_services["$cluster"]=$(IFS=', '; echo "${cluster_service_list[*]}")
+        
+        echo ""
+    done <<< "$clusters"
+    
+    # Exibir resultados no formato solicitado
+    echo -e "${BLUE}=== RESUMO DOS RESULTADOS ===${NC}"
+    echo ""
+    
+    for cluster in "${!cluster_services[@]}"; do
+        services="${cluster_services[$cluster]}"
+        if [ -n "$services" ]; then
+            echo -e "${GREEN}$cluster: [$services]${NC}"
+        else
+            echo -e "${YELLOW}$cluster: [nenhum serviço encontrado]${NC}"
+        fi
+    done
+}
+
+# Executar função principal
+main "$@"
