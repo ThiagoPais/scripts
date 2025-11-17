@@ -10,6 +10,7 @@ menu() {
     echo "ipa - Clona um repositório na pasta dos IPA"
     echo "analise - Cria um novo arquivo em Analises"
     echo "doc - Cria um novo arquivo em Documents (pode incluir subpastas)"
+    echo "note - Cria um novo arquivo em Notes (pode incluir subpastas)"
     echo "defeito - Cria um novo arquivo de análise de defeitos"
 }
 
@@ -136,6 +137,35 @@ then
     elif [ "$1" == "doc" ]
     then
         cd $HOME/Documents
+        if [ "$2" ]
+        then
+            file_name="$2"
+            # Extrai o diretório do caminho do arquivo
+            dir_path=$(dirname "$file_name")
+            
+            # Cria o diretório se não existir (incluindo diretórios pais)
+            if [ "$dir_path" != "." ] && [ ! -d "$dir_path" ]
+            then
+                echo "Criando diretório(s): $dir_path"
+                mkdir -p "$dir_path"
+            fi
+            
+            if [ -f "$file_name" ]
+            then
+                echo "Arquivo já existe"
+                code "$file_name"
+            else
+                echo "Criando arquivo $file_name"
+                touch "$file_name"
+                code "$file_name"
+            fi
+        else
+            echo "Argumento não informado. Informe o nome do arquivo."
+        fi
+
+    elif [ "$1" == "note" ]
+    then
+        cd $HOME/Documents/notes
         if [ "$2" ]
         then
             file_name="$2"

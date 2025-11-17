@@ -18,6 +18,9 @@ then
         selo)
             code "$HOME/Documents/selo/selo-backend" 2>/dev/null
             ;;
+        notes|note|notas)
+            code "$HOME/Documents/notes" 2>/dev/null
+            ;;
         *)
             cd "$HOME/Documents/aplicacoes" || exit
             for dir in */; do

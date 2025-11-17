@@ -1,0 +1,106 @@
+#!/bin/bash
+
+notes_path="$HOME/Documents/notes"
+cd $notes_path || exit
+
+show_help() {
+    echo ""
+    echo "Uso: note [OPÇÃO] [ARQUIVO]"
+    echo ""
+    echo "Gerenciador de notas pessoais"
+    echo ""
+    echo "Opções:"
+    echo "  -h              Mostra esta mensagem de ajuda"
+    echo "  -rm ARQUIVO     Remove/deleta o arquivo especificado"
+    echo "  -rd ARQUIVO     Lê e exibe o conteúdo do arquivo especificado"
+    echo "  ARQUIVO         Cria ou abre um arquivo para editar no VS Code"
+    echo "  (sem opção)     Lista todos os arquivos de notas"
+    echo ""
+    echo "Exemplos:"
+    echo "  note todo.txt              # Cria ou abre todo.txt"
+    echo "  note projetos/ideias.md    # Cria diretórios se necessário"
+    echo "  note -rd todo.txt          # Lê o conteúdo de todo.txt"
+    echo "  note -rm rascunho.txt      # Remove rascunho.txt"
+    echo "  note                       # Lista todos os arquivos"
+    echo ""
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]
+then
+    show_help
+    exit 0
+fi
+
+if [ "$1" = "-rm" ]
+then
+    if [ -z "$2" ]
+    then
+        echo "Erro: especifique o arquivo a ser removido"
+        echo "Uso: note -rm ARQUIVO"
+        exit 1
+    fi
+    
+    file_name="$2"
+    
+    if [ -f "$file_name" ]
+    then
+        echo "Removendo arquivo: $file_name"
+        rm "$file_name"
+        echo "Arquivo removido com sucesso"
+    else
+        echo "Erro: arquivo '$file_name' não encontrado"
+        exit 1
+    fi
+    exit 0
+fi
+
+if [ "$1" = "-rd" ]
+then
+    if [ -z "$2" ]
+    then
+        echo "Erro: especifique o arquivo a ser lido"
+        echo "Uso: note -rd ARQUIVO"
+        exit 1
+    fi
+    
+    file_name="$2"
+    
+    if [ -f "$file_name" ]
+    then
+        cat "$file_name"
+    else
+        echo "Erro: arquivo '$file_name' não encontrado"
+        exit 1
+    fi
+    exit 0
+fi
+
+if [ "$1" ]
+then
+    file_name="$1"
+    # Extrai o diretório do caminho do arquivo
+    dir_path=$(dirname "$file_name")
+    
+    # Cria o diretório se não existir (incluindo diretórios pais)
+    if [ "$dir_path" != "." ] && [ ! -d "$dir_path" ]
+    then
+        echo "Criando diretório(s): $dir_path"
+        mkdir -p "$dir_path"
+    fi
+    
+    if [ -f "$file_name" ]
+    then
+        echo "Arquivo já existe"
+        code "$file_name"
+    else
+        echo "Criando arquivo $file_name"
+        touch "$file_name"
+        code "$file_name"
+    fi
+else
+    echo ""
+    echo "Files in Notes:"
+    echo ""
+    find "$notes_path" -type f 2>/dev/null || echo "Directory not found or empty"
+    echo ""
+fi

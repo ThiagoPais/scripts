@@ -39,6 +39,9 @@ then
         capacitacao|cap|capac)
             cd $HOME/Documents/capacitacao
             ;;
+        notes|note|notas)
+            cd "$HOME/Documents/notes" 2>/dev/null
+            ;;
         doc|documentacao|doc-tec|doc-tecnica)
             cd "$HOME/Documents/documentacao-tecnica" 2>/dev/null
             ;;
